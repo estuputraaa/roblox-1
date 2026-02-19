@@ -17,6 +17,7 @@ local AnomalyEventService = require(ServicesFolder:WaitForChild("AnomalyEventSer
 local EndingService = require(ServicesFolder:WaitForChild("EndingService"))
 local MonetizationService = require(ServicesFolder:WaitForChild("MonetizationService"))
 local GameDirector = require(ServicesFolder:WaitForChild("GameDirector"))
+local PersistenceService = require(ServicesFolder:WaitForChild("PersistenceService"))
 
 local economy = EconomyManager.new()
 economy:Init()
@@ -26,6 +27,7 @@ local miniGames = MiniGameService.new(economy)
 local anomaly = AnomalyEventService.new(spawner, miniGames)
 local ending = EndingService.new(economy)
 local monetization = MonetizationService.new(economy)
+local persistence = PersistenceService.new()
 
 local gameDirector = GameDirector.new({
 	economy = economy,
@@ -34,6 +36,7 @@ local gameDirector = GameDirector.new({
 	anomaly = anomaly,
 	ending = ending,
 	monetization = monetization,
+	persistence = persistence,
 })
 
 MarketplaceService.ProcessReceipt = function(receiptInfo)
@@ -45,6 +48,16 @@ RunService.Heartbeat:Connect(function(deltaTime)
 end)
 
 local function startRunForPlayer(player)
+	local snapshot = persistence:LoadPlayerState(player)
+	if snapshot then
+		if snapshot.balance and economy.SetBalance then
+			economy:SetBalance(player, snapshot.balance, "LoadSavedState")
+		end
+		if snapshot.day and gameDirector.HydrateRunState then
+			gameDirector:HydrateRunState(snapshot.day, snapshot.phase)
+		end
+	end
+
 	if gameDirector:GetState() == "Idle" then
 		gameDirector:StartRun(player)
 	end
@@ -52,6 +65,14 @@ end
 
 Players.PlayerAdded:Connect(function(player)
 	startRunForPlayer(player)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	persistence:SavePlayerState(player, {
+		day = gameDirector:GetCurrentDay(),
+		phase = gameDirector:GetCurrentPhase(),
+		balance = economy:GetBalance(player),
+	})
 end)
 
 local existingPlayers = Players:GetPlayers()

@@ -103,6 +103,13 @@ function GameDirector:StartDay(player)
 	return true
 end
 
+function GameDirector:HydrateRunState(dayNumber, phaseName)
+	self._currentDay = math.clamp(math.floor(dayNumber or 1), 1, DayCycleConfig.MaxDays)
+	self._currentDifficulty = DayCycleConfig.GetDifficultyForDay(self._currentDay, self._runSeed)
+	local normalizedPhase = phaseName == "Night" and "Night" or "Morning"
+	self:_enterPhase(normalizedPhase)
+end
+
 function GameDirector:_advancePhase()
 	if self._currentPhase == "Morning" then
 		self:_enterPhase("Night")
@@ -150,6 +157,12 @@ function GameDirector:EndDay(player)
 			day = self._currentDay,
 			phase = self._currentPhase,
 			difficulty = self._currentDifficulty,
+		})
+	end
+	if self._services.persistence and self._services.persistence.SavePlayerState then
+		self._services.persistence:SavePlayerState(targetPlayer, {
+			day = self._currentDay,
+			phase = self._currentPhase,
 		})
 	end
 
