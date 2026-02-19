@@ -15,6 +15,7 @@ local FLAT_OPERATIONAL_COST = 30
 function EconomyManager.new()
 	local self = setmetatable({}, EconomyManager)
 	self._playerData = {}
+	self._onBalanceDepleted = nil
 	return self
 end
 
@@ -65,6 +66,7 @@ function EconomyManager:SetBalance(player, newBalance, reason)
 
 	data.balance = math.max(0, math.floor(newBalance))
 	self:_syncLeaderstats(player)
+	self:_notifyIfBalanceDepleted(player, reason)
 	-- TODO: Emit analytics event with reason.
 	return true
 end
@@ -107,6 +109,25 @@ function EconomyManager:_syncLeaderstats(player)
 	end
 end
 
+function EconomyManager:_notifyIfBalanceDepleted(player, reason)
+	if not self._onBalanceDepleted then
+		return
+	end
+
+	local data = self:GetData(player)
+	if not data then
+		return
+	end
+
+	if data.balance <= 0 then
+		self._onBalanceDepleted(player, reason or "cash_depleted")
+	end
+end
+
+function EconomyManager:SetBalanceDepletedHandler(handler)
+	self._onBalanceDepleted = handler
+end
+
 function EconomyManager:AddCash(player, amount, reason)
 	local data = self:GetData(player)
 	if not data then
@@ -115,6 +136,7 @@ function EconomyManager:AddCash(player, amount, reason)
 
 	data.balance += math.max(0, math.floor(amount))
 	self:_syncLeaderstats(player)
+	self:_notifyIfBalanceDepleted(player, reason)
 	-- TODO: Emit analytics event with reason.
 	return true
 end
@@ -132,6 +154,7 @@ function EconomyManager:TrySpendCash(player, amount, reason)
 
 	data.balance -= spend
 	self:_syncLeaderstats(player)
+	self:_notifyIfBalanceDepleted(player, reason)
 	-- TODO: Emit analytics event with reason.
 	return true
 end
