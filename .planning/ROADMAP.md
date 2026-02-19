@@ -10,7 +10,7 @@ Roadmap ini memprioritaskan loop harian yang bisa dimainkan end-to-end terlebih 
 - [x] **Phase 2: NPC Spawn and Behavior** - Weighted spawn, config NPC, dan behavior runner. (completed 2026-02-19)
 - [x] **Phase 3: Mini-Game and Anomaly Events** - Tiga mini-game utama terhubung ke ekonomi. (completed 2026-02-19)
 - [x] **Phase 4: Ending Flow** - Main ending 7 hari + easter egg endings. (completed 2026-02-19)
-- [ ] **Phase 5: UI and Feedback** - HUD dasar, warning event, objective clarity.
+- [x] **Phase 5: UI and Feedback** - HUD dasar, warning event, objective clarity. (completed 2026-02-19)
 - [ ] **Phase 6: Monetization Placeholder** - Hook GamePass/DevProduct aman untuk iterasi.
 
 ## Phase Details
@@ -85,8 +85,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md - Implement remote events untuk HUD updates
-- [ ] 05-02-PLAN.md - Implement UI client controller dasar
+- [x] 05-01-PLAN.md - Implement remote events untuk HUD updates
+- [x] 05-02-PLAN.md - Implement UI client controller dasar
 
 ### Phase 6: Monetization Placeholder
 **Goal**: Menyediakan jalur monetisasi yang siap diisi tanpa merusak gameplay.
@@ -110,5 +110,5 @@ Plans:
 | 2. NPC Spawn and Behavior | 3/3 | Complete | 2026-02-19 |
 | 3. Mini-Game and Anomaly Events | 3/3 | Complete | 2026-02-19 |
 | 4. Ending Flow | 2/2 | Complete | 2026-02-19 |
-| 5. UI and Feedback | 0/2 | Not started | - |
+| 5. UI and Feedback | 2/2 | Complete | 2026-02-19 |
 | 6. Monetization Placeholder | 0/2 | Not started | - |
