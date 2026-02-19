@@ -85,8 +85,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: Implement remote events untuk HUD updates
-- [ ] 05-02: Implement UI client controller dasar
+- [ ] 05-01-PLAN.md - Implement remote events untuk HUD updates
+- [ ] 05-02-PLAN.md - Implement UI client controller dasar
 
 ### Phase 6: Monetization Placeholder
 **Goal**: Menyediakan jalur monetisasi yang siap diisi tanpa merusak gameplay.
