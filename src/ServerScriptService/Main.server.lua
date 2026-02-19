@@ -7,6 +7,7 @@ Main.server
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ServicesFolder = script.Parent:WaitForChild("Services")
 
@@ -19,6 +20,10 @@ local EndingService = require(ServicesFolder:WaitForChild("EndingService"))
 local MonetizationService = require(ServicesFolder:WaitForChild("MonetizationService"))
 local GameDirector = require(ServicesFolder:WaitForChild("GameDirector"))
 local PersistenceService = require(ServicesFolder:WaitForChild("PersistenceService"))
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local SharedRemotes = Shared:WaitForChild("Remotes")
+local RemoteNames = require(SharedRemotes:WaitForChild("RemoteNames"))
 
 local economy = EconomyManager.new()
 economy:Init()
@@ -45,6 +50,37 @@ local gameDirector = GameDirector.new({
 	ending = ending,
 	monetization = monetization,
 	persistence = persistence,
+})
+
+local serverRemotesFolder = ReplicatedStorage:FindFirstChild("Remotes")
+if not serverRemotesFolder then
+	serverRemotesFolder = Instance.new("Folder")
+	serverRemotesFolder.Name = "Remotes"
+	serverRemotesFolder.Parent = ReplicatedStorage
+end
+
+local function ensureRemoteEvent(remoteName)
+	local remote = serverRemotesFolder:FindFirstChild(remoteName)
+	if remote and remote:IsA("RemoteEvent") then
+		return remote
+	end
+	if remote then
+		remote:Destroy()
+	end
+
+	local created = Instance.new("RemoteEvent")
+	created.Name = remoteName
+	created.Parent = serverRemotesFolder
+	return created
+end
+
+local anomalyWarningRemote = ensureRemoteEvent(RemoteNames.AnomalyWarning)
+ensureRemoteEvent(RemoteNames.EventFeed)
+ensureRemoteEvent(RemoteNames.MiniGameResult)
+
+anomaly:SetRuntimeContext({
+	gameDirector = gameDirector,
+	warningRemote = anomalyWarningRemote,
 })
 
 behaviorRunner:SetServices({
@@ -102,13 +138,20 @@ RunService.Heartbeat:Connect(function(deltaTime)
 	local spawnProfile = gameDirector:GetSpawnProfile()
 	local canSpawn = spawner:CanAttemptSpawn(spawnProfile, gameDirector)
 	if not canSpawn then
-		return
+		-- Tetap proses anomaly tick walau spawn NPC reguler sedang tidak tersedia.
+	else
+		spawner:SpawnNPC({
+			profileName = spawnProfile,
+			spawnCFrame = getRandomSpawnCFrame(),
+			gameDirector = gameDirector,
+		})
 	end
 
-	spawner:SpawnNPC({
-		profileName = spawnProfile,
+	anomaly:Tick(deltaTime, {
+		player = gameDirector:GetActivePlayer(),
 		spawnCFrame = getRandomSpawnCFrame(),
-		gameDirector = gameDirector,
+		difficulty = difficulty,
+		phaseName = gameDirector:GetCurrentPhase(),
 	})
 end)
 

@@ -290,6 +290,10 @@ function GameDirector:GetCurrentDay()
 	return self._currentDay
 end
 
+function GameDirector:GetActivePlayer()
+	return self._activePlayer
+end
+
 function GameDirector:GetCurrentPhase()
 	return self._currentPhase
 end
