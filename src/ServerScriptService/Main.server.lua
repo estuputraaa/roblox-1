@@ -5,6 +5,7 @@ Main.server
 ]]
 
 local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
 local RunService = game:GetService("RunService")
 
 local ServicesFolder = script.Parent:WaitForChild("Services")
@@ -34,6 +35,10 @@ local gameDirector = GameDirector.new({
 	ending = ending,
 	monetization = monetization,
 })
+
+MarketplaceService.ProcessReceipt = function(receiptInfo)
+	return monetization:ProcessReceipt(receiptInfo)
+end
 
 RunService.Heartbeat:Connect(function(deltaTime)
 	gameDirector:Tick(deltaTime)

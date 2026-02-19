@@ -109,7 +109,15 @@ function MonetizationService:PromptContinuePurchase(player)
 	end
 
 	self._pendingContinuePrompt[player.UserId] = true
-	MarketplaceService:PromptProductPurchase(player, continueProductId)
+	local ok, promptError = pcall(function()
+		MarketplaceService:PromptProductPurchase(player, continueProductId)
+	end)
+	if not ok then
+		self._pendingContinuePrompt[player.UserId] = nil
+		warn(("MonetizationService: gagal menampilkan continue prompt: %s"):format(tostring(promptError)))
+		return false
+	end
+
 	return true
 end
 

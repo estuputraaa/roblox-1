@@ -193,8 +193,12 @@ function GameDirector:TriggerFail(player, reason)
 	self._lastFailReason = reason or "cash_depleted"
 
 	local targetPlayer = player or self._activePlayer
+	local continuePrompted = false
 	if self._services.monetization and self._services.monetization.PromptContinuePurchase then
-		self._services.monetization:PromptContinuePurchase(targetPlayer)
+		continuePrompted = self._services.monetization:PromptContinuePurchase(targetPlayer)
+	end
+	if not continuePrompted then
+		self:HandleContinueDeclined(targetPlayer)
 	end
 
 	return true
@@ -220,12 +224,15 @@ end
 
 function GameDirector:HandleContinueDeclined(player)
 	local targetPlayer = player or self._activePlayer
+	self._isGameOver = true
+	self._state = "LobbyReturn"
+
 	if targetPlayer and targetPlayer.Parent then
 		pcall(function()
 			targetPlayer:LoadCharacter()
 		end)
 	end
-	self._state = "GameOver"
+
 	return true
 end
 
