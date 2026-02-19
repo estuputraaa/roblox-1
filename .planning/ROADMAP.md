@@ -71,8 +71,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: Implement `EndingService` dan flag tracking
-- [ ] 04-02: Integrasi trigger dari NPC/event ke ending resolver
+- [ ] 04-01-PLAN.md - Implement `EndingService` dan flag tracking
+- [ ] 04-02-PLAN.md - Integrasi trigger dari NPC/event ke ending resolver
 
 ### Phase 5: UI and Feedback
 **Goal**: Memberi visibilitas state game agar pemain memahami progres dan ancaman.
