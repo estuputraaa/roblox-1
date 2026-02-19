@@ -34,6 +34,7 @@ function EconomyManager:RegisterPlayer(player)
 		daySurvived = 0,
 		totalMiniGamesPlayed = 0,
 		totalMiniGameSuccess = 0,
+		continueUsedCount = 0,
 		flags = {},
 	}
 
@@ -54,6 +55,31 @@ end
 
 function EconomyManager:GetData(player)
 	return self._playerData[player.UserId]
+end
+
+function EconomyManager:SetBalance(player, newBalance, reason)
+	local data = self:GetData(player)
+	if not data then
+		return false
+	end
+
+	data.balance = math.max(0, math.floor(newBalance))
+	self:_syncLeaderstats(player)
+	-- TODO: Emit analytics event with reason.
+	return true
+end
+
+function EconomyManager:RecoverToMinimumBalance(player, minimumBalance, reason)
+	local data = self:GetData(player)
+	if not data then
+		return false
+	end
+
+	local floor = math.max(0, math.floor(minimumBalance or 0))
+	if data.balance < floor then
+		return self:SetBalance(player, floor, reason or "RecoveryFloor")
+	end
+	return true
 end
 
 function EconomyManager:GetBalance(player)
@@ -167,6 +193,23 @@ function EconomyManager:GetFlag(player, flagName)
 		return nil
 	end
 	return data.flags[flagName]
+end
+
+function EconomyManager:GetContinueUsageCount(player)
+	local data = self:GetData(player)
+	if not data then
+		return 0
+	end
+	return data.continueUsedCount or 0
+end
+
+function EconomyManager:IncrementContinueUsageCount(player)
+	local data = self:GetData(player)
+	if not data then
+		return 0
+	end
+	data.continueUsedCount = (data.continueUsedCount or 0) + 1
+	return data.continueUsedCount
 end
 
 return EconomyManager
