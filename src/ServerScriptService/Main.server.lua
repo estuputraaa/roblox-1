@@ -31,7 +31,9 @@ economy:Init()
 local spawner = NPCSpawner.new()
 local miniGames = MiniGameService.new(economy)
 local anomaly = AnomalyEventService.new(spawner, miniGames)
-local ending = EndingService.new(economy)
+local ending = EndingService.new({
+	economy = economy,
+})
 local monetization = MonetizationService.new(economy)
 local persistence = PersistenceService.new()
 local behaviorRunner = NPCBehaviorRunner.new({
@@ -77,9 +79,16 @@ end
 local anomalyWarningRemote = ensureRemoteEvent(RemoteNames.AnomalyWarning)
 ensureRemoteEvent(RemoteNames.EventFeed)
 ensureRemoteEvent(RemoteNames.MiniGameResult)
+local endingTriggeredRemote = ensureRemoteEvent(RemoteNames.EndingTriggered)
+
+ending:SetRuntimeContext({
+	endingRemote = endingTriggeredRemote,
+})
 
 anomaly:SetRuntimeContext({
 	gameDirector = gameDirector,
+	endingService = ending,
+	economy = economy,
 	warningRemote = anomalyWarningRemote,
 })
 

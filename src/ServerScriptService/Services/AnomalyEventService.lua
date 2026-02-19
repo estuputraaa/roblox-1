@@ -16,6 +16,8 @@ function AnomalyEventService.new(npcSpawner, miniGameService)
 	self._spawner = npcSpawner
 	self._miniGameService = miniGameService
 	self._gameDirector = nil
+	self._endingService = nil
+	self._economy = nil
 	self._warningRemote = nil
 	self._isEventActive = false
 	self._elapsedSinceLastEvent = 0
@@ -27,6 +29,8 @@ end
 function AnomalyEventService:SetRuntimeContext(options)
 	options = options or {}
 	self._gameDirector = options.gameDirector
+	self._endingService = options.endingService
+	self._economy = options.economy
 	self._warningRemote = options.warningRemote
 end
 
@@ -65,6 +69,52 @@ function AnomalyEventService:_consumeBudget()
 	return self._gameDirector:ConsumeEventBudget(1)
 end
 
+function AnomalyEventService:_recordEndingFlag(player, flagName, value)
+	if self._endingService and self._endingService.RecordFlag then
+		return self._endingService:RecordFlag(player, flagName, value)
+	end
+	if self._economy and self._economy.SetFlag then
+		self._economy:SetFlag(player, flagName, value)
+		return true
+	end
+	return false
+end
+
+function AnomalyEventService:_getEndingFlag(player, flagName)
+	if self._endingService and self._endingService.GetFlag then
+		return self._endingService:GetFlag(player, flagName)
+	end
+	if self._economy and self._economy.GetFlag then
+		return self._economy:GetFlag(player, flagName)
+	end
+	return nil
+end
+
+function AnomalyEventService:_maybeTriggerHiddenPortal(player, context)
+	if not player then
+		return false
+	end
+	if self:_getEndingFlag(player, "enteredHiddenPortal") == true then
+		return false
+	end
+
+	local discoveryChance = context.portalDiscoveryChance
+	if type(discoveryChance) ~= "number" then
+		discoveryChance = 0.08
+	end
+	local shouldDiscover = context.forceHiddenPortal == true or self._rng:NextNumber(0, 1) <= math.clamp(discoveryChance, 0, 1)
+	if not shouldDiscover then
+		return false
+	end
+
+	self:_recordEndingFlag(player, "enteredHiddenPortal", true)
+	self:_publishWarning({
+		type = "HiddenPortalDiscovered",
+		message = "Portal tersembunyi terbuka sesaat. Ending rahasia terdeteksi.",
+	})
+	return true
+end
+
 function AnomalyEventService:TriggerAnomalyEvent(player, spawnCFrame, context)
 	if self._isEventActive then
 		return nil
@@ -95,6 +145,9 @@ function AnomalyEventService:TriggerAnomalyEvent(player, spawnCFrame, context)
 	local miniGameResult = self._miniGameService:RunMiniGame(player, "AnomalyResponse", {
 		threatLevel = context.threatLevel or "high",
 	})
+	if miniGameResult and miniGameResult.success then
+		self:_maybeTriggerHiddenPortal(player, context)
+	end
 
 	local completedPayload = {
 		type = "AnomalyResolved",

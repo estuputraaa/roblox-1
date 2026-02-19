@@ -9,8 +9,12 @@ local MemeBehaviors = {}
 local handlers = {
 	bonk_player_for_event = function(npcModel, npcData, context)
 		npcModel:SetAttribute("BehaviorState", "BonkPlayer")
-		npcModel:SetAttribute("SetsFlag", npcData.behavior.setsFlag or "")
+		local flagName = npcData.behavior.setsFlag or "wasHitByTungTung"
+		npcModel:SetAttribute("SetsFlag", flagName)
 		npcModel:SetAttribute("BonkDamage", npcData.behavior.bonkDamage or 0)
+		if context.setPlayerFlag then
+			context.setPlayerFlag(flagName, true)
+		end
 		if context.playEmote then
 			context.playEmote(0.9)
 		end

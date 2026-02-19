@@ -135,6 +135,34 @@ function NPCBehaviorRunner:RunBehavior(npcModel, npcData)
 	end
 
 	local animationBundle = self:_setupAnimationBundle(npcModel, npcData)
+	local function getActivePlayer()
+		if self._services.gameDirector and self._services.gameDirector.GetActivePlayer then
+			return self._services.gameDirector:GetActivePlayer()
+		end
+		return nil
+	end
+
+	local function setPlayerFlag(flagName, flagValue)
+		if type(flagName) ~= "string" or flagName == "" then
+			return false
+		end
+
+		local player = getActivePlayer()
+		if not player then
+			return false
+		end
+
+		if self._services.ending and self._services.ending.RecordFlag then
+			return self._services.ending:RecordFlag(player, flagName, flagValue)
+		end
+		if self._services.economy and self._services.economy.SetFlag then
+			self._services.economy:SetFlag(player, flagName, flagValue)
+			return true
+		end
+
+		return false
+	end
+
 	local behaviorContext = {
 		services = self._services,
 		playEmote = function(chance)
@@ -143,6 +171,8 @@ function NPCBehaviorRunner:RunBehavior(npcModel, npcData)
 				self:_playEmote(animationBundle)
 			end
 		end,
+		setPlayerFlag = setPlayerFlag,
+		getActivePlayer = getActivePlayer,
 	}
 
 	local ok, didRun, reason = pcall(function()
