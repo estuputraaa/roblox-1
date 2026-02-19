@@ -7,9 +7,9 @@
 
 ### Core Loop
 
-- [ ] **CORE-01**: Player dapat memulai hari, menjalankan shift, dan menutup hari secara jelas.
-- [ ] **CORE-02**: Game melacak progress hari dari hari 1 sampai hari 7.
-- [ ] **CORE-03**: Player gagal jika kondisi kritis (mis. ekonomi/chaos) melewati batas yang didefinisikan.
+- [x] **CORE-01**: Player dapat memulai hari, menjalankan shift, dan menutup hari secara jelas.
+- [x] **CORE-02**: Game melacak progress hari dari hari 1 sampai hari 7.
+- [x] **CORE-03**: Player gagal jika kondisi kritis (mis. ekonomi/chaos) melewati batas yang didefinisikan.
 
 ### NPC System
 
@@ -26,9 +26,9 @@
 
 ### Economy
 
-- [ ] **ECO-01**: Player memiliki saldo uang yang bertambah/berkurang dari aktivitas game.
-- [ ] **ECO-02**: Hasil mini-game memengaruhi reward/penalty ekonomi.
-- [ ] **ECO-03**: Sistem memberi reward survive harian yang dapat dituning.
+- [x] **ECO-01**: Player memiliki saldo uang yang bertambah/berkurang dari aktivitas game.
+- [x] **ECO-02**: Hasil mini-game memengaruhi reward/penalty ekonomi.
+- [x] **ECO-03**: Sistem memberi reward survive harian yang dapat dituning.
 
 ### Ending
 
@@ -67,12 +67,12 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CORE-01 | Phase 1 | Pending |
-| CORE-02 | Phase 1 | Pending |
-| CORE-03 | Phase 1 | Pending |
-| ECO-01 | Phase 1 | Pending |
-| ECO-02 | Phase 1 | Pending |
-| ECO-03 | Phase 1 | Pending |
+| CORE-01 | Phase 1 | Complete |
+| CORE-02 | Phase 1 | Complete |
+| CORE-03 | Phase 1 | Complete |
+| ECO-01 | Phase 1 | Complete |
+| ECO-02 | Phase 1 | Complete |
+| ECO-03 | Phase 1 | Complete |
 | NPC-01 | Phase 2 | Pending |
 | NPC-02 | Phase 2 | Pending |
 | NPC-03 | Phase 2 | Pending |
@@ -95,4 +95,4 @@
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after initial definition*
+*Last updated: 2026-02-19 after phase 1 execution*

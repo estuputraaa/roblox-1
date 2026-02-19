@@ -6,7 +6,7 @@ Roadmap ini memprioritaskan loop harian yang bisa dimainkan end-to-end terlebih 
 
 ## Phases
 
-- [ ] **Phase 1: Core Economy Loop** - Day loop, kondisi gagal, dan ekonomi dasar sampai hari ke-7.
+- [x] **Phase 1: Core Economy Loop** - Day loop, kondisi gagal, dan ekonomi dasar sampai hari ke-7. (completed 2026-02-19)
 - [ ] **Phase 2: NPC Spawn and Behavior** - Weighted spawn, config NPC, dan behavior runner.
 - [ ] **Phase 3: Mini-Game and Anomaly Events** - Tiga mini-game utama terhubung ke ekonomi.
 - [ ] **Phase 4: Ending Flow** - Main ending 7 hari + easter egg endings.
@@ -26,9 +26,9 @@ Roadmap ini memprioritaskan loop harian yang bisa dimainkan end-to-end terlebih 
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md - Implement deterministic day-cycle state machine
-- [ ] 01-02-PLAN.md - Lock economy policy and continue pricing
-- [ ] 01-03-PLAN.md - Integrate fail flow, continue, and persistence hooks
+- [x] 01-01-PLAN.md - Implement deterministic day-cycle state machine
+- [x] 01-02-PLAN.md - Lock economy policy and continue pricing
+- [x] 01-03-PLAN.md - Integrate fail flow, continue, and persistence hooks
 
 ### Phase 2: NPC Spawn and Behavior
 **Goal**: Membuat sistem spawn NPC data-driven dengan weighted random dan behavior per tipe.
@@ -106,7 +106,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Economy Loop | 0/3 | Not started | - |
+| 1. Core Economy Loop | 3/3 | Complete    | 2026-02-19 |
 | 2. NPC Spawn and Behavior | 0/3 | Not started | - |
 | 3. Mini-Game and Anomaly Events | 0/3 | Not started | - |
 | 4. Ending Flow | 0/2 | Not started | - |
