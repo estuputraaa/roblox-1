@@ -7,7 +7,7 @@ Roadmap ini memprioritaskan loop harian yang bisa dimainkan end-to-end terlebih 
 ## Phases
 
 - [x] **Phase 1: Core Economy Loop** - Day loop, kondisi gagal, dan ekonomi dasar sampai hari ke-7. (completed 2026-02-19)
-- [ ] **Phase 2: NPC Spawn and Behavior** - Weighted spawn, config NPC, dan behavior runner.
+- [x] **Phase 2: NPC Spawn and Behavior** - Weighted spawn, config NPC, dan behavior runner. (completed 2026-02-19)
 - [ ] **Phase 3: Mini-Game and Anomaly Events** - Tiga mini-game utama terhubung ke ekonomi.
 - [ ] **Phase 4: Ending Flow** - Main ending 7 hari + easter egg endings.
 - [ ] **Phase 5: UI and Feedback** - HUD dasar, warning event, objective clarity.
@@ -41,9 +41,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md - Harden config schema and add server-side validator
-- [ ] 02-02-PLAN.md - Implement weighted spawn engine with runtime constraints
-- [ ] 02-03-PLAN.md - Integrate behavior runner and animation hooks
+- [x] 02-01-PLAN.md - Harden config schema and add server-side validator
+- [x] 02-02-PLAN.md - Implement weighted spawn engine with runtime constraints
+- [x] 02-03-PLAN.md - Integrate behavior runner and animation hooks
 
 ### Phase 3: Mini-Game and Anomaly Events
 **Goal**: Menghubungkan mini-game gameplay ke ekonomi dan status dunia.
@@ -107,7 +107,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Economy Loop | 3/3 | Complete    | 2026-02-19 |
-| 2. NPC Spawn and Behavior | 0/3 | Not started | - |
+| 2. NPC Spawn and Behavior | 3/3 | Complete | 2026-02-19 |
 | 3. Mini-Game and Anomaly Events | 0/3 | Not started | - |
 | 4. Ending Flow | 0/2 | Not started | - |
 | 5. UI and Feedback | 0/2 | Not started | - |
