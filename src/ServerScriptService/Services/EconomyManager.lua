@@ -110,6 +110,13 @@ function EconomyManager:TrySpendCash(player, amount, reason)
 	return true
 end
 
+function EconomyManager:_getFailurePenaltyMultiplier(miniGameId)
+	if miniGameId == "AnomalyResponse" then
+		return 1.35
+	end
+	return 1.0
+end
+
 function EconomyManager:ApplyMiniGameResult(player, miniGameId, score, success, baseReward, failurePenalty)
 	local data = self:GetData(player)
 	if not data then
@@ -126,7 +133,8 @@ function EconomyManager:ApplyMiniGameResult(player, miniGameId, score, success, 
 		local reward = math.floor((baseReward or 0) * (0.5 + normalizedScore))
 		self:AddCash(player, reward, ("MiniGameReward:%s"):format(miniGameId))
 	else
-		local penalty = math.floor((failurePenalty or 0) * (1.0 - normalizedScore * 0.5))
+		local contextualMultiplier = self:_getFailurePenaltyMultiplier(miniGameId)
+		local penalty = math.floor((failurePenalty or 0) * (1.0 - normalizedScore * 0.5) * contextualMultiplier)
 		self:TrySpendCash(player, penalty, ("MiniGamePenalty:%s"):format(miniGameId))
 	end
 end
