@@ -12,6 +12,9 @@ local MiniGameConfig = {
 		baseReward = 25,
 		failurePenalty = 18,
 		maxScore = 100,
+		successThreshold = 58,
+		scoreRangeMin = 50,
+		scoreRangeMax = 100,
 	},
 	RepairComputer = {
 		label = "Perbaiki Komputer",
@@ -20,6 +23,9 @@ local MiniGameConfig = {
 		baseReward = 42,
 		failurePenalty = 30,
 		maxScore = 100,
+		successThreshold = 65,
+		scoreRangeMin = 38,
+		scoreRangeMax = 98,
 	},
 	AnomalyResponse = {
 		label = "Tangani Anomali",
@@ -28,6 +34,9 @@ local MiniGameConfig = {
 		baseReward = 70,
 		failurePenalty = 52,
 		maxScore = 100,
+		successThreshold = 62,
+		scoreRangeMin = 30,
+		scoreRangeMax = 100,
 	},
 }
 

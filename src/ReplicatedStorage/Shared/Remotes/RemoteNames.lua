@@ -13,4 +13,6 @@ return {
 	FailTriggered = "FailTriggered",
 	ContinuePrompt = "ContinuePrompt",
 	EndingTriggered = "EndingTriggered",
+	MiniGameResult = "MiniGameResult",
+	AnomalyWarning = "AnomalyWarning",
 }
