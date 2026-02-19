@@ -43,8 +43,8 @@
 
 ### Monetization Placeholder
 
-- [ ] **MON-01**: Placeholder GamePass terdaftar dan bisa dicek kepemilikannya di server.
-- [ ] **MON-02**: Placeholder DevProduct dapat dipicu dan memberi reward dummy aman.
+- [x] **MON-01**: Placeholder GamePass terdaftar dan bisa dicek kepemilikannya di server.
+- [x] **MON-02**: Placeholder DevProduct dapat dipicu dan memberi reward dummy aman.
 
 ## v2 Requirements
 
@@ -85,8 +85,8 @@
 | END-03 | Phase 4 | Pending |
 | UI-01 | Phase 5 | Pending |
 | UI-02 | Phase 5 | Pending |
-| MON-01 | Phase 6 | Pending |
-| MON-02 | Phase 6 | Pending |
+| MON-01 | Phase 6 | Complete |
+| MON-02 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 20 total
@@ -95,4 +95,4 @@
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after phase 1 execution*
+*Last updated: 2026-02-19 after phase 6 execution*
