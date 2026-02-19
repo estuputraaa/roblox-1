@@ -179,6 +179,10 @@ local function buildHudPayload()
 	local timeRemaining = math.max(0, math.floor(gameDirector:GetPhaseTimeRemaining()))
 	local cash = activePlayer and economy:GetBalance(activePlayer) or 0
 	local objective = gameDirector.GetHudObjectiveText and gameDirector:GetHudObjectiveText() or "Survive sampai hari 7"
+	local continueOffer = nil
+	if activePlayer and monetization.GetContinueOffer then
+		continueOffer = monetization:GetContinueOffer(activePlayer)
+	end
 
 	return {
 		day = day,
@@ -189,6 +193,9 @@ local function buildHudPayload()
 		cash = cash,
 		eventBudget = gameDirector:GetEventBudgetForPhase(),
 		objective = objective,
+		continueAvailable = continueOffer and continueOffer.available == true or false,
+		continuePriceRobux = continueOffer and continueOffer.displayPriceRobux or 0,
+		continueUsageCount = continueOffer and continueOffer.usageCount or 0,
 		hint = "Hint ending: survive day 7, cari bonk TungTung atau portal tersembunyi.",
 		timestamp = os.time(),
 	}
@@ -233,20 +240,47 @@ local function publishTransitionsIfChanged()
 
 	if lastState.state and lastState.state ~= currentState then
 		if currentState == "GameOver" then
+			local continueOffer = gameDirector.GetLastContinueOffer and gameDirector:GetLastContinueOffer() or nil
 			fireAllSafe(remotes[RemoteNames.FailTriggered], {
 				reason = gameDirector:GetLastFailReason() or "unknown",
+				continueOffer = continueOffer,
 				timestamp = os.time(),
 			})
-			publishEventFeed("Kondisi kritis! Run gagal sementara.", "critical", "fail")
+			if continueOffer and continueOffer.available then
+				fireAllSafe(remotes[RemoteNames.ContinuePrompt], {
+					status = "prompted",
+					priceRobux = continueOffer.displayPriceRobux or 0,
+					nextPriceRobux = continueOffer.nextDisplayPriceRobux or 0,
+					continueUsageCount = continueOffer.usageCount or 0,
+					timestamp = os.time(),
+				})
+				publishEventFeed(
+					("Kondisi kritis! Continue tersedia (%d Robux)."):format(continueOffer.displayPriceRobux or 0),
+					"critical",
+					"fail"
+				)
+			else
+				publishEventFeed("Kondisi kritis! Continue tidak tersedia.", "critical", "fail")
+			end
 		elseif currentState == "LobbyReturn" then
+			local continueOffer = gameDirector.GetLastContinueOffer and gameDirector:GetLastContinueOffer() or nil
 			fireAllSafe(remotes[RemoteNames.ContinuePrompt], {
 				status = "declined",
+				priceRobux = continueOffer and continueOffer.displayPriceRobux or 0,
+				continueUsageCount = continueOffer and continueOffer.usageCount or 0,
 				timestamp = os.time(),
 			})
 			publishEventFeed("Continue ditolak. Kembali ke lobby.", "warning", "continue")
 		elseif currentState == "DayInProgress" and lastState.state == "GameOver" then
+			local continueOffer = nil
+			local activePlayer = gameDirector:GetActivePlayer()
+			if activePlayer and monetization.GetContinueOffer then
+				continueOffer = monetization:GetContinueOffer(activePlayer)
+			end
 			fireAllSafe(remotes[RemoteNames.ContinuePrompt], {
 				status = "granted",
+				priceRobux = continueOffer and continueOffer.displayPriceRobux or 0,
+				continueUsageCount = continueOffer and continueOffer.usageCount or 0,
 				timestamp = os.time(),
 			})
 			publishEventFeed("Continue berhasil. Run dilanjutkan.", "info", "continue")
@@ -329,6 +363,10 @@ local function startRunForPlayer(player)
 		if snapshot.miniGameStats and economy.SetMiniGameStats then
 			economy:SetMiniGameStats(player, snapshot.miniGameStats)
 		end
+	end
+
+	if monetization.RefreshPlayerPerkFlags then
+		monetization:RefreshPlayerPerkFlags(player)
 	end
 
 	if gameDirector:GetState() == "Idle" then

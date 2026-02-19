@@ -13,6 +13,18 @@ local DayCycleConfig = require(ConfigFolder:WaitForChild("DayCycleConfig"))
 local GameDirector = {}
 GameDirector.__index = GameDirector
 
+local function cloneShallow(source)
+	if type(source) ~= "table" then
+		return source
+	end
+
+	local copy = {}
+	for key, value in pairs(source) do
+		copy[key] = value
+	end
+	return copy
+end
+
 function GameDirector.new(services)
 	local self = setmetatable({}, GameDirector)
 
@@ -27,6 +39,7 @@ function GameDirector.new(services)
 	self._isGameOver = false
 	self._lastFailReason = nil
 	self._lastEndingCode = nil
+	self._lastContinueOffer = nil
 
 	self._phaseElapsedSeconds = 0
 	self._phaseTimeRemainingSeconds = DayCycleConfig.MorningDurationSeconds
@@ -105,6 +118,7 @@ function GameDirector:StartDay(player)
 	end
 
 	self._state = "DayInProgress"
+	self._lastContinueOffer = nil
 	self._currentDifficulty = DayCycleConfig.GetDifficultyForDay(self._currentDay, self._runSeed)
 	if self._services.economy and self._services.economy.ApplyOperationalCost then
 		self._services.economy:ApplyOperationalCost(self._activePlayer, self._currentDay)
@@ -188,6 +202,9 @@ function GameDirector:EndDay(player)
 	if self._services.economy and self._services.economy.AwardDailySurvival then
 		self._services.economy:AwardDailySurvival(targetPlayer, self._currentDay)
 	end
+	if self._services.monetization and self._services.monetization.ApplyPassiveDailyBonus then
+		self._services.monetization:ApplyPassiveDailyBonus(targetPlayer, self._currentDay)
+	end
 
 	if self._services.persistence and self._services.persistence.SaveDaySnapshot then
 		self._services.persistence:SaveDaySnapshot(targetPlayer, {
@@ -246,9 +263,11 @@ function GameDirector:TriggerFail(player, reason)
 
 	local targetPlayer = player or self._activePlayer
 	local continuePrompted = false
+	local continueOffer = nil
 	if self._services.monetization and self._services.monetization.PromptContinuePurchase then
-		continuePrompted = self._services.monetization:PromptContinuePurchase(targetPlayer)
+		continuePrompted, continueOffer = self._services.monetization:PromptContinuePurchase(targetPlayer)
 	end
+	self._lastContinueOffer = continueOffer
 	if not continuePrompted then
 		self:HandleContinueDeclined(targetPlayer)
 	end
@@ -266,11 +285,16 @@ function GameDirector:ApplyContinueRecovery(player)
 		return false
 	end
 
+	local recoveryFloor = 100
+	if self._services.monetization and self._services.monetization.GetContinueRecoveryCashFloor then
+		recoveryFloor = self._services.monetization:GetContinueRecoveryCashFloor()
+	end
 	if self._services.economy and self._services.economy.RecoverToMinimumBalance then
-		self._services.economy:RecoverToMinimumBalance(targetPlayer, 100, "ContinueRecovery")
+		self._services.economy:RecoverToMinimumBalance(targetPlayer, recoveryFloor, "ContinueRecovery")
 	end
 	self._isGameOver = false
 	self._state = "DayInProgress"
+	self._lastContinueOffer = nil
 	return true
 end
 
@@ -322,6 +346,10 @@ end
 
 function GameDirector:GetLastEndingCode()
 	return self._lastEndingCode
+end
+
+function GameDirector:GetLastContinueOffer()
+	return cloneShallow(self._lastContinueOffer)
 end
 
 function GameDirector:GetHudObjectiveText()

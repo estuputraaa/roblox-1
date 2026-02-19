@@ -179,7 +179,13 @@ local function applyHudPayload(payload)
 	timerLabel.Text = ("Sisa Waktu: %s"):format(formatClock(payload.timeRemainingSeconds))
 	cashLabel.Text = ("Cash: %s"):format(formatCash(payload.cash))
 	objectiveLabel.Text = ("Objective: %s"):format(tostring(payload.objective or "Survive sampai hari 7"))
-	hintLabel.Text = ("Hint: %s"):format(tostring(payload.hint or "Cari petunjuk ending tersembunyi."))
+	local hintText = tostring(payload.hint or "Cari petunjuk ending tersembunyi.")
+	if payload.continueAvailable then
+		local continuePrice = math.max(0, math.floor(tonumber(payload.continuePriceRobux) or 0))
+		local usageCount = math.max(0, math.floor(tonumber(payload.continueUsageCount) or 0))
+		hintText = ("%s | Continue: %d Robux (pakai: %d)"):format(hintText, continuePrice, usageCount)
+	end
+	hintLabel.Text = ("Hint: %s"):format(hintText)
 end
 
 local function connectRemote(remoteName, handler)
@@ -251,12 +257,16 @@ end)
 
 connectRemote(RemoteNames.ContinuePrompt, function(payload)
 	local status = type(payload) == "table" and payload.status or "unknown"
+	local priceRobux = type(payload) == "table" and math.max(0, math.floor(tonumber(payload.priceRobux) or 0)) or 0
 	if status == "granted" then
 		pushFeed("Continue berhasil, lanjutkan run.", "info")
 		showAlert("Continue berhasil", "info")
 	elseif status == "declined" then
 		pushFeed("Continue ditolak, kembali ke lobby.", "warning")
 		showAlert("Continue ditolak", "warning")
+	elseif status == "prompted" then
+		pushFeed(("Continue ditawarkan: %d Robux"):format(priceRobux), "warning")
+		showAlert(("Continue %d Robux"):format(priceRobux), "warning")
 	end
 end)
 
