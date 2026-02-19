@@ -12,6 +12,7 @@ local ServicesFolder = script.Parent:WaitForChild("Services")
 
 local EconomyManager = require(ServicesFolder:WaitForChild("EconomyManager"))
 local NPCSpawner = require(ServicesFolder:WaitForChild("NPCSpawner"))
+local NPCBehaviorRunner = require(ServicesFolder:WaitForChild("NPCBehaviorRunner"))
 local MiniGameService = require(ServicesFolder:WaitForChild("MiniGameService"))
 local AnomalyEventService = require(ServicesFolder:WaitForChild("AnomalyEventService"))
 local EndingService = require(ServicesFolder:WaitForChild("EndingService"))
@@ -28,6 +29,13 @@ local anomaly = AnomalyEventService.new(spawner, miniGames)
 local ending = EndingService.new(economy)
 local monetization = MonetizationService.new(economy)
 local persistence = PersistenceService.new()
+local behaviorRunner = NPCBehaviorRunner.new({
+	economy = economy,
+	miniGames = miniGames,
+	anomaly = anomaly,
+	ending = ending,
+})
+spawner:SetBehaviorRunner(behaviorRunner)
 
 local gameDirector = GameDirector.new({
 	economy = economy,
@@ -39,12 +47,69 @@ local gameDirector = GameDirector.new({
 	persistence = persistence,
 })
 
+behaviorRunner:SetServices({
+	economy = economy,
+	miniGames = miniGames,
+	anomaly = anomaly,
+	ending = ending,
+	gameDirector = gameDirector,
+})
+
 MarketplaceService.ProcessReceipt = function(receiptInfo)
 	return monetization:ProcessReceipt(receiptInfo)
 end
 
+local function getRandomSpawnCFrame()
+	local spawnPointsFolder = workspace:FindFirstChild("NPCSpawnPoints")
+	if not spawnPointsFolder then
+		return nil
+	end
+
+	local points = {}
+	for _, instance in ipairs(spawnPointsFolder:GetChildren()) do
+		if instance:IsA("BasePart") then
+			table.insert(points, instance)
+		end
+	end
+
+	if #points == 0 then
+		return nil
+	end
+
+	local randomIndex = math.random(1, #points)
+	return points[randomIndex].CFrame
+end
+
+local spawnAccumulator = 0
+local baseSpawnIntervalSeconds = 2.25
+local minimumSpawnIntervalSeconds = 0.4
+
 RunService.Heartbeat:Connect(function(deltaTime)
 	gameDirector:Tick(deltaTime)
+	if not gameDirector:IsRunActive() then
+		return
+	end
+
+	spawnAccumulator += deltaTime
+	local difficulty = gameDirector:GetDifficultyForCurrentDay()
+	local spawnRateMultiplier = difficulty and difficulty.spawnRateMultiplier or 1
+	local effectiveInterval = math.max(minimumSpawnIntervalSeconds, baseSpawnIntervalSeconds / math.max(0.1, spawnRateMultiplier))
+	if spawnAccumulator < effectiveInterval then
+		return
+	end
+	spawnAccumulator = 0
+
+	local spawnProfile = gameDirector:GetSpawnProfile()
+	local canSpawn = spawner:CanAttemptSpawn(spawnProfile, gameDirector)
+	if not canSpawn then
+		return
+	end
+
+	spawner:SpawnNPC({
+		profileName = spawnProfile,
+		spawnCFrame = getRandomSpawnCFrame(),
+		gameDirector = gameDirector,
+	})
 end)
 
 local function startRunForPlayer(player)
