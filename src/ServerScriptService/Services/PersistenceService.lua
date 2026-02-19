@@ -7,6 +7,18 @@ PersistenceService
 local PersistenceService = {}
 PersistenceService.__index = PersistenceService
 
+local function cloneTableDeep(source)
+	if type(source) ~= "table" then
+		return source
+	end
+
+	local copy = {}
+	for key, value in pairs(source) do
+		copy[key] = cloneTableDeep(value)
+	end
+	return copy
+end
+
 function PersistenceService.new()
 	local self = setmetatable({}, PersistenceService)
 	self._sessionCache = {}
@@ -17,7 +29,11 @@ function PersistenceService:LoadPlayerState(player)
 	if not player then
 		return nil
 	end
-	return self._sessionCache[player.UserId]
+	local snapshot = self._sessionCache[player.UserId]
+	if not snapshot then
+		return nil
+	end
+	return cloneTableDeep(snapshot)
 end
 
 function PersistenceService:SavePlayerState(player, snapshot)
@@ -25,7 +41,14 @@ function PersistenceService:SavePlayerState(player, snapshot)
 		return false
 	end
 
-	self._sessionCache[player.UserId] = snapshot
+	local existing = self._sessionCache[player.UserId] or {}
+	local normalizedSnapshot = cloneTableDeep(snapshot)
+	if existing.lastDaySnapshot and not normalizedSnapshot.lastDaySnapshot then
+		normalizedSnapshot.lastDaySnapshot = cloneTableDeep(existing.lastDaySnapshot)
+	end
+	normalizedSnapshot.updatedAt = os.time()
+
+	self._sessionCache[player.UserId] = normalizedSnapshot
 	-- TODO: Persist snapshot ke DataStoreService.
 	return true
 end
@@ -35,10 +58,11 @@ function PersistenceService:SaveDaySnapshot(player, daySnapshot)
 		return false
 	end
 
-	local existing = self._sessionCache[player.UserId] or {}
-	existing.lastDaySnapshot = daySnapshot
+	local existing = cloneTableDeep(self._sessionCache[player.UserId] or {})
+	existing.lastDaySnapshot = cloneTableDeep(daySnapshot)
 	existing.day = daySnapshot.day
 	existing.phase = daySnapshot.phase
+	existing.updatedAt = os.time()
 
 	self._sessionCache[player.UserId] = existing
 	-- TODO: Persist day snapshot ke DataStoreService.

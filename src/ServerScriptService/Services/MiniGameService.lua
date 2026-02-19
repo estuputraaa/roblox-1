@@ -175,15 +175,17 @@ function MiniGameService:RunMiniGame(player, miniGameId, context)
 	local rawResult = handler(self, player, config, context or {}) or {}
 	local result = self:_normalizeResult(miniGameId, config, rawResult)
 
-	if self._economy and self._economy.ApplyMiniGameResult then
-		self._economy:ApplyMiniGameResult(
-			player,
-			miniGameId,
-			result.score,
-			result.success,
-			config.baseReward,
-			config.failurePenalty
-		)
+	if self._economy and self._economy.ApplyMiniGameResultEnvelope then
+		local impact = self._economy:ApplyMiniGameResultEnvelope(player, result, config.baseReward, config.failurePenalty)
+		if impact then
+			result.rewardApplied = impact.rewardApplied
+			result.penaltyApplied = impact.penaltyApplied
+			result.netDelta = impact.netDelta
+			result.balanceAfter = impact.balanceAfter
+		end
+	elseif self._economy and self._economy.ApplyMiniGameResult then
+		self._economy:ApplyMiniGameResult(player, miniGameId, result.score, result.success, config.baseReward, config.failurePenalty)
+		result.netDelta = result.rewardApplied - result.penaltyApplied
 	end
 
 	return result

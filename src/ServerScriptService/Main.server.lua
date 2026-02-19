@@ -164,6 +164,9 @@ local function startRunForPlayer(player)
 		if snapshot.day and gameDirector.HydrateRunState then
 			gameDirector:HydrateRunState(snapshot.day, snapshot.phase)
 		end
+		if snapshot.miniGameStats and economy.SetMiniGameStats then
+			economy:SetMiniGameStats(player, snapshot.miniGameStats)
+		end
 	end
 
 	if gameDirector:GetState() == "Idle" then
@@ -180,6 +183,7 @@ Players.PlayerRemoving:Connect(function(player)
 		day = gameDirector:GetCurrentDay(),
 		phase = gameDirector:GetCurrentPhase(),
 		balance = economy:GetBalance(player),
+		miniGameStats = economy:GetMiniGameStats(player),
 	})
 end)
 
