@@ -41,9 +41,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Buat `NPCBehaviorConfig` dan validator schema
-- [ ] 02-02: Implement `NPCSpawner` weighted class + weighted NPC selection
-- [ ] 02-03: Integrasi behavior runner + animation hooks
+- [ ] 02-01-PLAN.md - Harden config schema and add server-side validator
+- [ ] 02-02-PLAN.md - Implement weighted spawn engine with runtime constraints
+- [ ] 02-03-PLAN.md - Integrate behavior runner and animation hooks
 
 ### Phase 3: Mini-Game and Anomaly Events
 **Goal**: Menghubungkan mini-game gameplay ke ekonomi dan status dunia.
