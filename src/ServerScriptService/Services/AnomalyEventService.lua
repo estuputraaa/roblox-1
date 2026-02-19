@@ -19,6 +19,7 @@ function AnomalyEventService.new(npcSpawner, miniGameService)
 	self._endingService = nil
 	self._economy = nil
 	self._warningRemote = nil
+	self._eventPublisher = nil
 	self._isEventActive = false
 	self._elapsedSinceLastEvent = 0
 	self._rng = Random.new()
@@ -32,6 +33,7 @@ function AnomalyEventService:SetRuntimeContext(options)
 	self._endingService = options.endingService
 	self._economy = options.economy
 	self._warningRemote = options.warningRemote
+	self._eventPublisher = options.publishEventFeed
 end
 
 function AnomalyEventService:_rollNextEventWindow()
@@ -40,14 +42,23 @@ end
 
 function AnomalyEventService:_publishWarning(payload)
 	if not self._warningRemote then
-		return
+		-- no-op, continue to optional publisher callback below
+	else
+		local ok, err = pcall(function()
+			self._warningRemote:FireAllClients(payload)
+		end)
+		if not ok then
+			warn(("AnomalyEventService: gagal publish warning: %s"):format(tostring(err)))
+		end
 	end
 
-	local ok, err = pcall(function()
-		self._warningRemote:FireAllClients(payload)
-	end)
-	if not ok then
-		warn(("AnomalyEventService: gagal publish warning: %s"):format(tostring(err)))
+	if self._eventPublisher then
+		local ok, err = pcall(function()
+			self._eventPublisher(payload)
+		end)
+		if not ok then
+			warn(("AnomalyEventService: gagal publish callback warning: %s"):format(tostring(err)))
+		end
 	end
 end
 

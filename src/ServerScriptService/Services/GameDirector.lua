@@ -324,6 +324,30 @@ function GameDirector:GetLastEndingCode()
 	return self._lastEndingCode
 end
 
+function GameDirector:GetHudObjectiveText()
+	if self._state == "Completed" then
+		local endingCode = self._lastEndingCode or "UNKNOWN"
+		return ("Run selesai (%s). Coba ulang untuk ending lain."):format(endingCode)
+	end
+	if self._state == "GameOver" then
+		return "Saldo habis. Gunakan Continue atau ulang run."
+	end
+	if self._state == "LobbyReturn" then
+		return "Run berakhir. Kembali ke lobby."
+	end
+
+	if self._currentDay >= DayCycleConfig.MaxDays then
+		return "Malam terakhir. Bertahan untuk ending utama."
+	end
+
+	local base = ("Survive sampai hari %d (%d/%d)."):format(
+		DayCycleConfig.MaxDays,
+		self._currentDay,
+		DayCycleConfig.MaxDays
+	)
+	return base .. " Hint: bonk TungTung atau portal tersembunyi untuk easter egg."
+end
+
 function GameDirector:IsGameOver()
 	return self._isGameOver
 end

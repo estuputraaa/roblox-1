@@ -1,7 +1,7 @@
 --[[
 Main.server
-- Bootstrap sederhana untuk menghubungkan service utama.
-- Cocok sebagai titik awal wiring pada project Roblox.
+- Bootstrap service utama dan pipeline feedback server->client.
+- Menjaga HUD/event feed tetap sinkron dengan state runtime game.
 ]]
 
 local Players = game:GetService("Players")
@@ -76,20 +76,59 @@ local function ensureRemoteEvent(remoteName)
 	return created
 end
 
-local anomalyWarningRemote = ensureRemoteEvent(RemoteNames.AnomalyWarning)
-ensureRemoteEvent(RemoteNames.EventFeed)
-ensureRemoteEvent(RemoteNames.MiniGameResult)
-local endingTriggeredRemote = ensureRemoteEvent(RemoteNames.EndingTriggered)
+local remotes = {
+	[RemoteNames.HUDUpdate] = ensureRemoteEvent(RemoteNames.HUDUpdate),
+	[RemoteNames.EventFeed] = ensureRemoteEvent(RemoteNames.EventFeed),
+	[RemoteNames.MiniGamePrompt] = ensureRemoteEvent(RemoteNames.MiniGamePrompt),
+	[RemoteNames.DayTransition] = ensureRemoteEvent(RemoteNames.DayTransition),
+	[RemoteNames.DayPhaseUpdate] = ensureRemoteEvent(RemoteNames.DayPhaseUpdate),
+	[RemoteNames.DayTimerUpdate] = ensureRemoteEvent(RemoteNames.DayTimerUpdate),
+	[RemoteNames.FailTriggered] = ensureRemoteEvent(RemoteNames.FailTriggered),
+	[RemoteNames.ContinuePrompt] = ensureRemoteEvent(RemoteNames.ContinuePrompt),
+	[RemoteNames.EndingTriggered] = ensureRemoteEvent(RemoteNames.EndingTriggered),
+	[RemoteNames.MiniGameResult] = ensureRemoteEvent(RemoteNames.MiniGameResult),
+	[RemoteNames.AnomalyWarning] = ensureRemoteEvent(RemoteNames.AnomalyWarning),
+}
+
+local function fireAllSafe(remoteEvent, payload)
+	if not remoteEvent then
+		return
+	end
+	local ok, err = pcall(function()
+		remoteEvent:FireAllClients(payload)
+	end)
+	if not ok then
+		warn(("Main.server: gagal kirim remote '%s': %s"):format(remoteEvent.Name, tostring(err)))
+	end
+end
+
+local function publishEventFeed(message, level, eventType)
+	fireAllSafe(remotes[RemoteNames.EventFeed], {
+		type = eventType or "system",
+		level = level or "info",
+		message = message,
+		timestamp = os.time(),
+	})
+end
 
 ending:SetRuntimeContext({
-	endingRemote = endingTriggeredRemote,
+	endingRemote = remotes[RemoteNames.EndingTriggered],
 })
 
 anomaly:SetRuntimeContext({
 	gameDirector = gameDirector,
 	endingService = ending,
 	economy = economy,
-	warningRemote = anomalyWarningRemote,
+	warningRemote = remotes[RemoteNames.AnomalyWarning],
+	publishEventFeed = function(payload)
+		local message = (type(payload) == "table" and payload.message) or "Anomali terdeteksi."
+		local eventType = (type(payload) == "table" and payload.type) or "anomaly"
+		local level = "warning"
+		if eventType == "HiddenPortalDiscovered" then
+			level = "critical"
+		end
+		publishEventFeed(message, level, tostring(eventType))
+	end,
 })
 
 behaviorRunner:SetServices({
@@ -125,12 +164,128 @@ local function getRandomSpawnCFrame()
 	return points[randomIndex].CFrame
 end
 
+local function getPhaseLabel(phaseName)
+	if phaseName == "Night" then
+		return "Malam"
+	end
+	return "Pagi"
+end
+
+local function buildHudPayload()
+	local activePlayer = gameDirector:GetActivePlayer()
+	local day = gameDirector:GetCurrentDay()
+	local phaseName = gameDirector:GetCurrentPhase()
+	local stateName = gameDirector:GetState()
+	local timeRemaining = math.max(0, math.floor(gameDirector:GetPhaseTimeRemaining()))
+	local cash = activePlayer and economy:GetBalance(activePlayer) or 0
+	local objective = gameDirector.GetHudObjectiveText and gameDirector:GetHudObjectiveText() or "Survive sampai hari 7"
+
+	return {
+		day = day,
+		phase = phaseName,
+		phaseLabel = getPhaseLabel(phaseName),
+		state = stateName,
+		timeRemainingSeconds = timeRemaining,
+		cash = cash,
+		eventBudget = gameDirector:GetEventBudgetForPhase(),
+		objective = objective,
+		hint = "Hint ending: survive day 7, cari bonk TungTung atau portal tersembunyi.",
+		timestamp = os.time(),
+	}
+end
+
 local spawnAccumulator = 0
+local hudAccumulator = 0
 local baseSpawnIntervalSeconds = 2.25
 local minimumSpawnIntervalSeconds = 0.4
+local hudPushIntervalSeconds = 0.5
+
+local lastState = {
+	day = nil,
+	phase = nil,
+	state = nil,
+	endingCode = nil,
+}
+
+local function publishTransitionsIfChanged()
+	local currentDay = gameDirector:GetCurrentDay()
+	local currentPhase = gameDirector:GetCurrentPhase()
+	local currentState = gameDirector:GetState()
+	local currentEndingCode = gameDirector:GetLastEndingCode()
+
+	if lastState.day and lastState.day ~= currentDay then
+		fireAllSafe(remotes[RemoteNames.DayTransition], {
+			fromDay = lastState.day,
+			toDay = currentDay,
+			timestamp = os.time(),
+		})
+		publishEventFeed(("Hari %d dimulai."):format(currentDay), "info", "day_transition")
+	end
+
+	if lastState.phase and lastState.phase ~= currentPhase then
+		fireAllSafe(remotes[RemoteNames.DayPhaseUpdate], {
+			phase = currentPhase,
+			label = getPhaseLabel(currentPhase),
+			timestamp = os.time(),
+		})
+		publishEventFeed(("Fase berganti: %s"):format(getPhaseLabel(currentPhase)), currentPhase == "Night" and "warning" or "info", "phase_change")
+	end
+
+	if lastState.state and lastState.state ~= currentState then
+		if currentState == "GameOver" then
+			fireAllSafe(remotes[RemoteNames.FailTriggered], {
+				reason = gameDirector:GetLastFailReason() or "unknown",
+				timestamp = os.time(),
+			})
+			publishEventFeed("Kondisi kritis! Run gagal sementara.", "critical", "fail")
+		elseif currentState == "LobbyReturn" then
+			fireAllSafe(remotes[RemoteNames.ContinuePrompt], {
+				status = "declined",
+				timestamp = os.time(),
+			})
+			publishEventFeed("Continue ditolak. Kembali ke lobby.", "warning", "continue")
+		elseif currentState == "DayInProgress" and lastState.state == "GameOver" then
+			fireAllSafe(remotes[RemoteNames.ContinuePrompt], {
+				status = "granted",
+				timestamp = os.time(),
+			})
+			publishEventFeed("Continue berhasil. Run dilanjutkan.", "info", "continue")
+		elseif currentState == "Completed" then
+			publishEventFeed("Run selesai. Periksa hasil ending.", "info", "run_complete")
+		end
+	end
+
+	if currentEndingCode and lastState.endingCode ~= currentEndingCode then
+		publishEventFeed(("Ending tercapai: %s"):format(currentEndingCode), "critical", "ending")
+	end
+
+	lastState.day = currentDay
+	lastState.phase = currentPhase
+	lastState.state = currentState
+	lastState.endingCode = currentEndingCode
+end
+
+local function pushHudSnapshot(reason)
+	local payload = buildHudPayload()
+	payload.reason = reason or "periodic"
+	fireAllSafe(remotes[RemoteNames.HUDUpdate], payload)
+	fireAllSafe(remotes[RemoteNames.DayTimerUpdate], {
+		timeRemainingSeconds = payload.timeRemainingSeconds,
+		phase = payload.phase,
+		timestamp = payload.timestamp,
+	})
+end
 
 RunService.Heartbeat:Connect(function(deltaTime)
 	gameDirector:Tick(deltaTime)
+	publishTransitionsIfChanged()
+
+	hudAccumulator += deltaTime
+	if hudAccumulator >= hudPushIntervalSeconds then
+		hudAccumulator = 0
+		pushHudSnapshot("periodic")
+	end
+
 	if not gameDirector:IsRunActive() then
 		return
 	end
@@ -146,9 +301,7 @@ RunService.Heartbeat:Connect(function(deltaTime)
 
 	local spawnProfile = gameDirector:GetSpawnProfile()
 	local canSpawn = spawner:CanAttemptSpawn(spawnProfile, gameDirector)
-	if not canSpawn then
-		-- Tetap proses anomaly tick walau spawn NPC reguler sedang tidak tersedia.
-	else
+	if canSpawn then
 		spawner:SpawnNPC({
 			profileName = spawnProfile,
 			spawnCFrame = getRandomSpawnCFrame(),
@@ -181,6 +334,9 @@ local function startRunForPlayer(player)
 	if gameDirector:GetState() == "Idle" then
 		gameDirector:StartRun(player)
 	end
+
+	pushHudSnapshot("player_join")
+	publishEventFeed("Selamat datang di Jaga Warnet. Bertahan sampai hari 7.", "info", "welcome")
 end
 
 Players.PlayerAdded:Connect(function(player)
@@ -201,4 +357,5 @@ if #existingPlayers > 0 then
 	startRunForPlayer(existingPlayers[1])
 end
 
+pushHudSnapshot("bootstrap")
 print("Jaga Warnet bootstrap initialized", gameDirector:GetCurrentDay(), gameDirector:GetState())
