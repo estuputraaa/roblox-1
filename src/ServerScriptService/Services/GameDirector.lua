@@ -205,7 +205,9 @@ function GameDirector:EndDay(player)
 
 	local endingCode = nil
 	if self._services.ending and self._services.ending.ResolveEnding then
-		endingCode = self._services.ending:ResolveEnding(targetPlayer, self._currentDay, self._isGameOver)
+		endingCode = self._services.ending:ResolveEnding(targetPlayer, self._currentDay, self._isGameOver, {
+			source = "EndDay",
+		})
 	end
 	if endingCode then
 		self._lastEndingCode = endingCode
