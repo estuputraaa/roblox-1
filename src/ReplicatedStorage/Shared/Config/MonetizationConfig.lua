@@ -30,12 +30,12 @@ local MonetizationConfig = {
 	GamePassCatalog = {
 		FastRepair = {
 			id = 0,
-			enabled = false,
+			enabled = true,
 			notes = "Perk placeholder: bonus speed saat mini-game repair.",
 		},
 		LuckyShift = {
 			id = 0,
-			enabled = false,
+			enabled = true,
 			notes = "Perk placeholder: bonus kecil reward harian.",
 		},
 	},
