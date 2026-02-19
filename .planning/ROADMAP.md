@@ -8,7 +8,7 @@ Roadmap ini memprioritaskan loop harian yang bisa dimainkan end-to-end terlebih 
 
 - [x] **Phase 1: Core Economy Loop** - Day loop, kondisi gagal, dan ekonomi dasar sampai hari ke-7. (completed 2026-02-19)
 - [x] **Phase 2: NPC Spawn and Behavior** - Weighted spawn, config NPC, dan behavior runner. (completed 2026-02-19)
-- [ ] **Phase 3: Mini-Game and Anomaly Events** - Tiga mini-game utama terhubung ke ekonomi.
+- [x] **Phase 3: Mini-Game and Anomaly Events** - Tiga mini-game utama terhubung ke ekonomi. (completed 2026-02-19)
 - [ ] **Phase 4: Ending Flow** - Main ending 7 hari + easter egg endings.
 - [ ] **Phase 5: UI and Feedback** - HUD dasar, warning event, objective clarity.
 - [ ] **Phase 6: Monetization Placeholder** - Hook GamePass/DevProduct aman untuk iterasi.
@@ -56,9 +56,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md - Implement `MiniGameService` contract dan registry
-- [ ] 03-02-PLAN.md - Implement anomali trigger pipeline
-- [ ] 03-03-PLAN.md - Integrasi mini-game result ke `EconomyManager`
+- [x] 03-01-PLAN.md - Implement `MiniGameService` contract dan registry
+- [x] 03-02-PLAN.md - Implement anomali trigger pipeline
+- [x] 03-03-PLAN.md - Integrasi mini-game result ke `EconomyManager`
 
 ### Phase 4: Ending Flow
 **Goal**: Menentukan kondisi tamat utama dan cabang easter egg ending.
@@ -108,7 +108,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Core Economy Loop | 3/3 | Complete    | 2026-02-19 |
 | 2. NPC Spawn and Behavior | 3/3 | Complete | 2026-02-19 |
-| 3. Mini-Game and Anomaly Events | 0/3 | Not started | - |
+| 3. Mini-Game and Anomaly Events | 3/3 | Complete | 2026-02-19 |
 | 4. Ending Flow | 0/2 | Not started | - |
 | 5. UI and Feedback | 0/2 | Not started | - |
 | 6. Monetization Placeholder | 0/2 | Not started | - |
