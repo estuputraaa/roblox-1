@@ -56,9 +56,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: Implement `MiniGameService` contract dan registry
-- [ ] 03-02: Implement anomali trigger pipeline
-- [ ] 03-03: Integrasi mini-game result ke `EconomyManager`
+- [ ] 03-01-PLAN.md - Implement `MiniGameService` contract dan registry
+- [ ] 03-02-PLAN.md - Implement anomali trigger pipeline
+- [ ] 03-03-PLAN.md - Integrasi mini-game result ke `EconomyManager`
 
 ### Phase 4: Ending Flow
 **Goal**: Menentukan kondisi tamat utama dan cabang easter egg ending.
