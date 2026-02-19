@@ -26,9 +26,9 @@ Roadmap ini memprioritaskan loop harian yang bisa dimainkan end-to-end terlebih 
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Implementasi `GameDirector` + state hari dasar
-- [ ] 01-02: Implementasi `EconomyManager` + reward curve awal
-- [ ] 01-03: Integrasi fail condition + persistence placeholders
+- [ ] 01-01-PLAN.md - Implement deterministic day-cycle state machine
+- [ ] 01-02-PLAN.md - Lock economy policy and continue pricing
+- [ ] 01-03-PLAN.md - Integrate fail flow, continue, and persistence hooks
 
 ### Phase 2: NPC Spawn and Behavior
 **Goal**: Membuat sistem spawn NPC data-driven dengan weighted random dan behavior per tipe.
