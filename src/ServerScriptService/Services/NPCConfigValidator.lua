@@ -24,6 +24,21 @@ local function shallowCopyTable(source)
 	return result
 end
 
+local function copyClassNumberMap(sourceMap, supportedClasses, fallbackValue, warnings, warningPrefix)
+	local normalized = {}
+	for className in pairs(supportedClasses) do
+		local value = sourceMap and sourceMap[className] or nil
+		if type(value) ~= "number" or value < 0 then
+			value = fallbackValue
+			if warnings and warningPrefix then
+				table.insert(warnings, ("%s '%s' invalid, fallback %.2f"):format(warningPrefix, className, fallbackValue))
+			end
+		end
+		normalized[className] = value
+	end
+	return normalized
+end
+
 local function validateProfile(profileName, profileData, supportedClasses, warnings)
 	if type(profileData) ~= "table" then
 		table.insert(warnings, ("Profile '%s' invalid: expected table"):format(profileName))
@@ -101,6 +116,82 @@ local function validateNpcEntry(index, entry, supportedClasses, warnings)
 	return normalized
 end
 
+local function normalizeSpawnPolicy(rawPolicy, supportedClasses, warnings)
+	local fallbackPolicy = {
+		maxActiveGlobal = 25,
+		maxActiveByClass = {
+			normal = 12,
+			anomaly = 8,
+			meme = 8,
+		},
+		spawnThrottleSeconds = 1.25,
+		classCooldownSeconds = {
+			normal = 1.0,
+			anomaly = 2.5,
+			meme = 2.0,
+		},
+		profileClassCooldownSeconds = {},
+	}
+
+	if type(rawPolicy) ~= "table" then
+		table.insert(warnings, "SpawnPolicy missing: fallback defaults used")
+		rawPolicy = {}
+	end
+
+	local maxActiveGlobal = rawPolicy.maxActiveGlobal
+	if type(maxActiveGlobal) ~= "number" or maxActiveGlobal < 1 then
+		maxActiveGlobal = fallbackPolicy.maxActiveGlobal
+		table.insert(warnings, "SpawnPolicy.maxActiveGlobal invalid: fallback default used")
+	end
+
+	local normalizedMaxActiveByClass = copyClassNumberMap(
+		type(rawPolicy.maxActiveByClass) == "table" and rawPolicy.maxActiveByClass or fallbackPolicy.maxActiveByClass,
+		supportedClasses,
+		4,
+		warnings,
+		"SpawnPolicy.maxActiveByClass"
+	)
+
+	local spawnThrottleSeconds = rawPolicy.spawnThrottleSeconds
+	if type(spawnThrottleSeconds) ~= "number" or spawnThrottleSeconds < 0 then
+		spawnThrottleSeconds = fallbackPolicy.spawnThrottleSeconds
+		table.insert(warnings, "SpawnPolicy.spawnThrottleSeconds invalid: fallback default used")
+	end
+
+	local normalizedClassCooldownSeconds = copyClassNumberMap(
+		type(rawPolicy.classCooldownSeconds) == "table" and rawPolicy.classCooldownSeconds or fallbackPolicy.classCooldownSeconds,
+		supportedClasses,
+		1.5,
+		warnings,
+		"SpawnPolicy.classCooldownSeconds"
+	)
+
+	local normalizedProfileCooldowns = {}
+	if type(rawPolicy.profileClassCooldownSeconds) == "table" then
+		for profileName, profileCooldowns in pairs(rawPolicy.profileClassCooldownSeconds) do
+			if type(profileCooldowns) == "table" then
+				normalizedProfileCooldowns[profileName] = copyClassNumberMap(
+					profileCooldowns,
+					supportedClasses,
+					1.5,
+					warnings,
+					("SpawnPolicy.profileClassCooldownSeconds.%s"):format(profileName)
+				)
+			else
+				table.insert(warnings, ("SpawnPolicy.profileClassCooldownSeconds.%s invalid: expected table"):format(profileName))
+			end
+		end
+	end
+
+	return {
+		maxActiveGlobal = maxActiveGlobal,
+		maxActiveByClass = normalizedMaxActiveByClass,
+		spawnThrottleSeconds = spawnThrottleSeconds,
+		classCooldownSeconds = normalizedClassCooldownSeconds,
+		profileClassCooldownSeconds = normalizedProfileCooldowns,
+	}
+end
+
 function NPCConfigValidator.Validate(rawConfig)
 	local warnings = {}
 	local result = {
@@ -176,18 +267,7 @@ function NPCConfigValidator.Validate(rawConfig)
 		return result
 	end
 
-	local normalizedPolicy = rawConfig.SpawnPolicy
-	if type(normalizedPolicy) ~= "table" then
-		normalizedPolicy = {
-			maxActiveGlobal = 25,
-			maxActiveByClass = {
-				normal = 12,
-				anomaly = 8,
-				meme = 8,
-			},
-		}
-		table.insert(warnings, "SpawnPolicy missing: fallback defaults used")
-	end
+	local normalizedPolicy = normalizeSpawnPolicy(rawConfig.SpawnPolicy, supportedClasses, warnings)
 
 	result.normalizedConfig = {
 		SchemaVersion = rawConfig.SchemaVersion or "unknown",

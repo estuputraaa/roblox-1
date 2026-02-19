@@ -44,6 +44,32 @@ NPCBehaviorConfig.SpawnPolicy = {
 		anomaly = 8,
 		meme = 8,
 	},
+	-- Menahan frekuensi spawn attempt global dari heartbeat server.
+	spawnThrottleSeconds = 1.25,
+	-- Cooldown default per class (dipakai jika profile override tidak ada).
+	classCooldownSeconds = {
+		normal = 1.0,
+		anomaly = 2.5,
+		meme = 2.0,
+	},
+	-- Override cooldown per profile supaya pacing Day/Night/Event terasa berbeda.
+	profileClassCooldownSeconds = {
+		Day = {
+			normal = 1.0,
+			anomaly = 4.0,
+			meme = 2.4,
+		},
+		Night = {
+			normal = 1.6,
+			anomaly = 2.0,
+			meme = 2.2,
+		},
+		EventAnomaly = {
+			normal = 2.8,
+			anomaly = 0.9,
+			meme = 1.8,
+		},
+	},
 }
 
 NPCBehaviorConfig.NPCs = {

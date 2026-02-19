@@ -32,6 +32,8 @@ function GameDirector.new(services)
 	self._phaseTimeRemainingSeconds = DayCycleConfig.MorningDurationSeconds
 	self._phaseEventBudget = DayCycleConfig.EventBudgetByPhase.Morning or 0
 	self._consumedEventsInPhase = 0
+	self._forcedSpawnProfile = nil
+	self._forcedSpawnProfileExpiresAt = 0
 
 	if self._services.economy and self._services.economy.SetBalanceDepletedHandler then
 		self._services.economy:SetBalanceDepletedHandler(function(player, reason)
@@ -59,6 +61,15 @@ function GameDirector:_enterPhase(phaseName)
 	self._phaseTimeRemainingSeconds = DayCycleConfig.GetPhaseDurationSeconds(phaseName)
 	self._phaseEventBudget = DayCycleConfig.EventBudgetByPhase[phaseName] or 0
 	self._consumedEventsInPhase = 0
+	self._forcedSpawnProfile = nil
+	self._forcedSpawnProfileExpiresAt = 0
+end
+
+function GameDirector:_resolvePhaseSpawnProfile(phaseName)
+	if phaseName == "Night" then
+		return "Night"
+	end
+	return "Day"
 end
 
 function GameDirector:StartRun(player)
@@ -131,10 +142,36 @@ function GameDirector:Tick(deltaTime)
 
 	self._phaseElapsedSeconds += deltaTime
 	self._phaseTimeRemainingSeconds = math.max(0, self._phaseTimeRemainingSeconds - deltaTime)
+	if self._forcedSpawnProfile and os.clock() >= self._forcedSpawnProfileExpiresAt then
+		self._forcedSpawnProfile = nil
+		self._forcedSpawnProfileExpiresAt = 0
+	end
 
 	if self._phaseTimeRemainingSeconds <= 0 then
 		self:_advancePhase()
 	end
+end
+
+function GameDirector:ForceSpawnProfile(profileName, durationSeconds)
+	if type(profileName) ~= "string" or profileName == "" then
+		return false
+	end
+
+	self._forcedSpawnProfile = profileName
+	self._forcedSpawnProfileExpiresAt = os.clock() + math.max(0.1, durationSeconds or 1)
+	return true
+end
+
+function GameDirector:GetSpawnProfile()
+	if self._services.anomaly and self._services.anomaly.IsEventActive and self._services.anomaly:IsEventActive() then
+		return "EventAnomaly"
+	end
+
+	if self._forcedSpawnProfile then
+		return self._forcedSpawnProfile
+	end
+
+	return self:_resolvePhaseSpawnProfile(self._currentPhase)
 end
 
 function GameDirector:EndDay(player)
@@ -283,6 +320,10 @@ end
 
 function GameDirector:IsGameOver()
 	return self._isGameOver
+end
+
+function GameDirector:IsRunActive()
+	return self._state == "DayInProgress" and not self._isGameOver
 end
 
 return GameDirector
